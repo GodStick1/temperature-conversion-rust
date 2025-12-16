@@ -106,7 +106,7 @@ fn choice_to_unit(num: i32) -> TemperatureType {
         1 => TemperatureType::Celsius,
         2 => TemperatureType::Fahrenheit,
         3 => TemperatureType::Kelvin,
-        _ => unreachable!(),
+        _ => unreachable!("num 已經被 limit_number 保證在 1..=3"),
     }
 }
 
