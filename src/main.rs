@@ -1,69 +1,119 @@
 //Celsius 攝氏度
 //Fahrenheit 華氏
+//Kelvin 凱氏溫度
 //Temperature conversion 溫度轉換
 use std::io::{self, Write}; //等效下面兩行
 //use std::io;
 //use std::io::Write //防止文字卡在buffer（緩衝）
 
+enum TemperatureType {
+    Celsius,
+    Fahrenheit,
+    Kelvin,
+}
+
 fn main() {
-    println!("1.攝氏溫度轉華氏溫度");
-    println!("2.華氏溫度轉攝氏溫度");
-    println!("請輸入1或2");
+    println!("1.攝氏溫度 2.華氏溫度 3.凱氏溫度");
+    print_new("請輸入要被轉的溫度單位: ");
+    let choice1 = read_choice_i32("要被轉的溫度單位: ");
+    let choice1 = limit_number(choice1, 1, 3, "要被轉的溫度單位: ");
 
-    'loop1: loop {
-        let mut choice_input = String::new();
-        io::stdin().read_line(&mut choice_input).expect("Error");
+    println!("1.攝氏溫度 2.華氏溫度 3.凱氏溫度");
+    print_new("請輸入要轉成的溫度單位: ");
+    let choice2 = read_choice_i32("要轉成的溫度單位: ");
+    let choice2 = limit_number(choice2, 1, 3, "要轉成的溫度單位: ");
 
-        let choice: i32 = match choice_input.trim().parse() {
-            Ok(n) => n,
+    let choice1 = choice_to_unit(choice1);
+    let choice2 = choice_to_unit(choice2);
+    let choice1_name = choice_name(&choice1);
+    let choice2_name = choice_name(&choice2);
+
+    print!("請輸入{} = ", choice1_name);
+    io::stdout().flush().unwrap(); //防止文字卡在buffer（緩衝）
+    let mut temp_num = read_choice_f64(choice1_name);
+
+    temp_num = to_kelvin(temp_num, choice1);
+    temp_num = from_kelvin(temp_num, choice2);
+
+    println!("{}= {}", choice2_name, temp_num);
+}
+
+fn read_choice_f64(print_string: &str) -> f64 {
+    loop {
+        let mut string1 = String::new();
+        io::stdin().read_line(&mut string1).expect("Error");
+
+        match string1.trim().parse::<f64>() {
+            Ok(n) => {
+                return n;
+            }
             Err(_) => {
-                println!("請重新輸入");
-                continue 'loop1;
+                let string1 = String::from("請重新輸入") + print_string;
+                print_new(&string1);
             }
         };
+    }
+}
 
-        if !(choice == 1 || choice == 2) {
-            println!("請重新輸入");
-            continue 'loop1;
-        }
+fn read_choice_i32(print_string: &str) -> i32 {
+    loop {
+        let mut string1 = String::new();
+        io::stdin().read_line(&mut string1).expect("Error");
 
-        let temperature_names = ["華氏", "攝氏"];
-
-        let input_temperature: f64 = 'loop2: loop {
-            let mut temperature_input = String::new();
-
-            print!("請輸入{}溫度 = ", temperature_names[(choice - 1) as usize]);
-            io::stdout().flush().unwrap(); //防止文字卡在buffer（緩衝）
-
-            io::stdin()
-                .read_line(&mut temperature_input)
-                .expect("Error");
-
-            let temperature = match temperature_input.trim().parse() {
-                Ok(n) => n,
-                Err(_) => {
-                    println!("請重新輸入");
-                    continue 'loop2;
-                }
-            };
-
-            break temperature;
+        match string1.trim().parse::<i32>() {
+            Ok(n) => {
+                return n;
+            }
+            Err(_) => {
+                let string1 = String::from("請重新輸入") + print_string;
+                print_new(&string1);
+            }
         };
+    }
+}
 
-        let converted_temperature = if choice == 1 {
-            (input_temperature * 9.0 / 5.0) + 32.0
-        } else {
-            (input_temperature - 32.0) * 5.0 / 9.0
-        };
+fn limit_number(mut choice: i32, min: i32, max: i32, str1: &str) -> i32 {
+    if !((choice >= min) && (choice <= max)) {
+        choice = read_choice_i32(str1);
+        return limit_number(choice, min, max, str1);
+    }
+    choice
+}
 
-        println!(
-            "{}度{} = {}度{}",
-            input_temperature,
-            temperature_names[(choice - 1) as usize],
-            converted_temperature,
-            temperature_names[(choice % 2) as usize]
-        );
+fn print_new(str1: &str) {
+    print!("{}", str1);
+    io::stdout().flush().unwrap(); //防止文字卡在buffer（緩衝）
+}
 
-        break;
+fn to_kelvin(num: f64, unit: TemperatureType) -> f64 {
+    match unit {
+        TemperatureType::Celsius => num + 273.15,
+        TemperatureType::Fahrenheit => (num - 32.0) * 5.0 / 9.0 + 273.15,
+        TemperatureType::Kelvin => num,
+    }
+}
+
+fn from_kelvin(num: f64, unit: TemperatureType) -> f64 {
+    match unit {
+        TemperatureType::Celsius => num - 273.15,
+        TemperatureType::Fahrenheit => (num - 273.15) * 9.0 / 5.0 + 32.0,
+        TemperatureType::Kelvin => num,
+    }
+}
+
+fn choice_to_unit(num: i32) -> TemperatureType {
+    match num {
+        1 => TemperatureType::Celsius,
+        2 => TemperatureType::Fahrenheit,
+        3 => TemperatureType::Kelvin,
+        _ => unreachable!(),
+    }
+}
+
+fn choice_name(unit: &TemperatureType) -> &'static str {
+    match unit {
+        TemperatureType::Celsius => "攝氏溫度",
+        TemperatureType::Fahrenheit => "華氏溫度",
+        TemperatureType::Kelvin => "凱氏溫度",
     }
 }
